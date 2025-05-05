@@ -15,14 +15,9 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIcon, QPixmap, QPainter
 from PySide6.QtCore import Qt
 
-# === Resource Paths ===
-# Place these in ./resources/ alongside this script:
-#   logo.png, watermark.png, banner.png,
-#   power.png, ports.png, ip.png
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 RESOURCES_DIR = os.path.join(SCRIPT_DIR, 'resources')
 
-# === Helper Functions ===
 def find_ti_subfolder(prefix):
     base = r"C:\ti"
     try:
@@ -33,7 +28,6 @@ def find_ti_subfolder(prefix):
         pass
     return None
 
-# === Check and Run Implementations ===
 def check_mmwave_sdk():
     return find_ti_subfolder("mmwave_sdk_") is not None
 
@@ -145,7 +139,6 @@ def check_data_capture():
     post = os.path.join(folder, "mmWaveStudio", "PostProc")
     return os.path.isdir(post) and bool(os.listdir(post))
 
-# === Corrective Actions ===
 def open_device_manager():
     subprocess.Popen(["mmc", "devmgmt.msc"] )
 
@@ -262,7 +255,6 @@ class StepPage(QWizardPage):
     def isComplete(self):
         return self.status.text().startswith("✔️")
 
-# === Main Application ===
 def main():
     app = QApplication(sys.argv)
     wiz = QWizard()
@@ -270,7 +262,6 @@ def main():
     wiz.setWindowIcon(QIcon(os.path.join(RESOURCES_DIR, 'logo.png')))
     wiz.setWizardStyle(QWizard.ModernStyle)
 
-    # Watermark + Banner stacked
     dpi = app.primaryScreen().logicalDotsPerInch()
     cm3 = int(dpi * 3.0 / 2.54)
     wm = QPixmap(os.path.join(RESOURCES_DIR, 'watermark.png')).scaled(
@@ -285,7 +276,6 @@ def main():
     painter.end()
     wiz.setPixmap(QWizard.WatermarkPixmap, combo)
 
-    # 1) Installation
     installs = [
         ("Install mmWave SDK", check_mmwave_sdk, run_mmwave_sdk_installer, "https://www.ti.com/tool/MMWAVE-SDK"),
         ("Install Visual C++ 2013 x86", check_vc_redist_2013_x86, run_vc_redist_installer, "https://www.microsoft.com/en-in/download/details.aspx?id=40784"),
@@ -300,14 +290,12 @@ def main():
     for t, ck, rn, url in installs:
         wiz.addPage(StepPage(t, ck, rn, url))
 
-    # 2) Hardware Connection
     wiz.addPage(InstructionPage(
         "Hardware Connection",
         "Connect IWR1843 to DCA1000, attach Ethernet & USB, power with 5V/2A.\nSet SOP pins to Debug mode (see TI docs).",
         image_name="power"
     ))
 
-    # 3) COM Port Detection
     wiz.addPage(InstructionPage(
         "COM Port Detection",
         "Ensure you see 4× AR-DevPack-EVM-012 and 2× XDS110 ports.",
@@ -316,7 +304,6 @@ def main():
         correct_fn=open_device_manager
     ))
 
-    # 4) Network Configuration
     wiz.addPage(InstructionPage(
         "Network Configuration",
         "Set IPv4 → IP: 192.168.33.30, Mask: 255.255.255.0.",
@@ -325,7 +312,6 @@ def main():
         correct_fn=open_network_settings
     ))
 
-    # 5) Lua Script Setup
     wiz.addPage(InstructionPage(
         "Lua Script Setup",
         "Check or install the Lua script in mmWaveStudio/Scripts.",
@@ -333,7 +319,6 @@ def main():
         correct_fn=download_and_install_lua
     ))
 
-    # 6) Launch mmWave Studio
     wiz.addPage(InstructionPage(
         "Launch mmWave Studio",
         "Open mmWave Studio and load your Lua script via Lua Shell.",
@@ -341,7 +326,6 @@ def main():
     ))
     wiz.addPage(StepPage("Launch mmWave Studio", check_mmwave_studio, launch_mmwave_studio))
 
-    # 7) Verify Data Capture
     wiz.addPage(InstructionPage(
         "Verify Data Capture",
         "After running the script, confirm files appear in PostProc.",
