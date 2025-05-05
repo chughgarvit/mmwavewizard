@@ -54,7 +54,7 @@ def check_matlab_runtime():
     base = r"C:\Program Files\MATLAB\MATLAB Runtime"
     try:
         for d in os.listdir(base):
-            if d.startswith("R2015a"):
+            if d.startswith("v851"):
                 return True
     except FileNotFoundError:
         pass
@@ -82,10 +82,24 @@ def run_mmwave_studio_installer():
         subprocess.Popen([path])
 
 def check_ticloud_agent():
-    return shutil.which("ticloud_agent") is not None
+    base = r"C:\Users\Argha\TICloudAgent"
+    try:
+        for d in os.listdir(base):
+            if d.startswith("ccs"):
+                return True
+    except FileNotFoundError:
+        pass
+    return False
 
 def check_demo_visualizer():
-    return find_ti_subfolder("mmwave_demo_visualizer") is not None
+    base = r"C:\Users\Argha\guicomposer\runtime\gcruntime.v11"
+    try:
+        for d in os.listdir(base):
+            if d.startswith("mmWave_Demo_Visualizer"):
+                return True
+    except FileNotFoundError:
+        pass
+    return False
 
 def run_demo_visualizer_installer():
     path, _ = QFileDialog.getOpenFileName(None, "Select Demo Visualizer installer", "", "Executable Files (*.exe)")
@@ -93,7 +107,14 @@ def run_demo_visualizer_installer():
         subprocess.Popen([path])
 
 def check_emupack():
-    return find_ti_subfolder("xds_emulation_software_package") is not None
+    base = r"C:\ti\ccs_base"
+    try:
+        for d in os.listdir(base):
+            if d.startswith("emulation"):
+                return True
+    except FileNotFoundError:
+        pass
+    return False
 
 def run_emupack_installer():
     path, _ = QFileDialog.getOpenFileName(None, "Select EMUPACK installer", "", "Executable Files (*.exe)")
@@ -103,7 +124,8 @@ def run_emupack_installer():
 def check_com_ports():
     ports = list_ports.comports()
     count = sum(1 for p in ports if "AR-DevPack-EVM-012" in p.description)
-    return count >= 4
+    count += sum(1 for p in ports if "XDS110 Class" in p.description)
+    return count >= 6
 
 def check_network_adapter():
     for nic, addrs in psutil.net_if_addrs().items():
@@ -144,6 +166,7 @@ def launch_mmwave_studio():
         QMessageBox.warning(None, "Warning", "Install mmWave Studio first.")
         return
     exe = os.path.join(folder, "mmWaveStudio", "mmWaveStudio.exe")
+    QMessageBox.critical(None, f"exe: {exe}")
     if os.path.isfile(exe):
         subprocess.Popen([exe])
     else:
