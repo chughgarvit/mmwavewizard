@@ -1,0 +1,3 @@
+[submodule "radar_data_collection/OpenRadar"]
+	path = radar_data_collection/OpenRadar
+	url = https://github.com/arghasen10/OpenRadar.git
