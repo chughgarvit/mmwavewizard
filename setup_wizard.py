@@ -50,7 +50,7 @@ def run_vc_redist_installer():
 
 def check_matlab_runtime():
     base = r"C:\Program Files\MATLAB\MATLAB Runtime"
-    return any(d.lower().startswith("r2015a") for d in (os.listdir(base) if os.path.isdir(base) else []))
+    return any(d.lower().startswith("v851") for d in (os.listdir(base) if os.path.isdir(base) else []))
 
 def run_matlab_runtime_installer():
     path, _ = QFileDialog.getOpenFileName(None, "Select MATLAB Runtime installer", "", "*.exe")
@@ -127,8 +127,8 @@ def download_and_install_lua():
         QMessageBox.critical(None, "Error", f"Download failed:\n{e}")
 
 def launch_mmwave_studio():
-    folder = find_ti_subfolder("mmwave_studio_") or ""
-    exe = os.path.join(folder, "mmWaveStudio", "mmWaveStudio.exe")
+    btn_launch.clicked.connect(lambda: os.startfile(r"C:\ti\mmwave_studio_02_01_01_00\mmWaveStudio\RunTime"))
+
     if os.path.isfile(exe):
         subprocess.Popen([exe])
     else:
@@ -201,7 +201,7 @@ class InstructionPage(QWizardPage):
                 QMessageBox.warning(self, "Check Failed", f"{self.title()} not OK.")
 
 class StepPage(QWizardPage):
-    def __init__(self, title, check_fn, run_fn=None, download_url=None):
+    def __init__(self, title, check_fn, run_fn=None, download_url=None, launch=None):
         super().__init__()
         self.setTitle(title)
         self.check_fn = check_fn
@@ -225,6 +225,11 @@ class StepPage(QWizardPage):
             btn_dl = QPushButton("Download Installer")
             btn_dl.clicked.connect(lambda: webbrowser.open(download_url))
             layout.addWidget(btn_dl)
+
+        if launch:
+            btn_launch = QPushButton("Launch")
+            btn_launch.clicked.connect(lambda: os.startfile(r"C:\ti\mmwave_studio_02_01_01_00\mmWaveStudio\RunTime"))
+            layout.addWidget(btn_launch)
 
         btn_skip = QPushButton("Skip")
         btn_skip.clicked.connect(lambda: self.wizard().next())
@@ -324,7 +329,7 @@ def main():
         "Open mmWave Studio and load your Lua script via Lua Shell.",
         check_fn=check_mmwave_studio
     ))
-    wiz.addPage(StepPage("Launch mmWave Studio", check_mmwave_studio, launch_mmwave_studio))
+    wiz.addPage(StepPage("Launch mmWave Studio", check_mmwave_studio, None, None, launch_mmwave_studio))
 
     wiz.addPage(InstructionPage(
         "Verify Data Capture",
