@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QIcon, QPixmap, QPainter
 from PySide6.QtCore import Qt
+import tkinter as tk
+from tkinter import messagebox
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 RESOURCES_DIR = os.path.join(SCRIPT_DIR, 'resources')
@@ -127,12 +129,26 @@ def download_and_install_lua():
         QMessageBox.critical(None, "Error", f"Download failed:\n{e}")
 
 def launch_mmwave_studio():
-    btn_launch.clicked.connect(lambda: os.startfile(r"C:\ti\mmwave_studio_02_01_01_00\mmWaveStudio\RunTime"))
+    folder = find_ti_subfolder("mmwave_studio_") or ""
+    post = os.path.join(folder, "mmWaveStudio", "PostProc")
+    return os.path.isdir(post) and bool(os.listdir(post))
 
-    if os.path.isfile(exe):
-        subprocess.Popen([exe])
-    else:
-        QMessageBox.critical(None, "Error", f"Executable not found at {exe}")
+def check_data_collection_status():
+    try:
+        # Run the script and capture output
+        result = subprocess.run(
+            ["python3", "transfer_file.py"],
+            capture_output=True,
+            text=True,
+            timeout=30  # Optional: prevent hangs
+        )
+        output = result.stdout if result.returncode == 0 else result.stderr
+    except Exception as e:
+        output = f"Error: {str(e)}"
+
+    # Display the output in a popup
+    messagebox.showinfo("Data Collection Status", output)
+
 
 def check_data_capture():
     folder = find_ti_subfolder("mmwave_studio_") or ""
