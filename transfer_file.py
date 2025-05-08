@@ -6,6 +6,11 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import paramiko
 from scp import SCPClient
+import json
+
+def load_credentials(config_path='config.json'):
+    with open(config_path, 'r') as f:
+        return json.load(f)
 
 class DelayedTransferHandler(FileSystemEventHandler):
     def __init__(self):
@@ -31,19 +36,30 @@ class DelayedTransferHandler(FileSystemEventHandler):
                         print(f"Previous file {prev_file} not found for transfer.")
 
     def transfer_file(self, filepath):
+        folder = os.path.dirname(filepath)
+        subdir_name = os.path.basename(folder) 
+        remote_subdir = f"/home/argha/{subdir_name}"
+
+        creds = load_credentials()
+
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         
         try:
-            ssh.connect('10.5.20.128', username='argha', password='nitd@12345')
-
+            ssh.connect(creds['host'], username=creds['username'], password=creds['password'])
+            
+            # Ensure the remote subdirectory exists
+            stdin, stdout, stderr = ssh.exec_command(f"mkdir -p {remote_subdir}")
+            stdout.channel.recv_exit_status()  # wait for command to complete
+            
             with SCPClient(ssh.get_transport()) as scp:
-                scp.put(filepath, remote_path='/home/argha')
-                print(f"✅ Transfer successful: {filepath}")
+                scp.put(filepath, remote_path=remote_subdir)
+                print(f"✅ Transfer successful: {filepath} → {remote_subdir}")
         except Exception as e:
             print(f"❌ Transfer failed: {e}")
         finally:
             ssh.close()
+
 
 def monitor_directory(path_to_watch):
     event_handler = DelayedTransferHandler()
@@ -60,5 +76,5 @@ def monitor_directory(path_to_watch):
 
 # Main block
 if __name__ == "__main__":
-    directory_to_monitor = r"C:\ti\mmwave_studio_02_01_01_00\mmWaveStudio\PostProc"
+    directory_to_monitor = r"C:\Users\Argha\Documents\github\test_folder"
     monitor_directory(directory_to_monitor)
